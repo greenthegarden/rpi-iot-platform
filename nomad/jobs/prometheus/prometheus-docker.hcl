@@ -14,7 +14,7 @@ job "prometheus" {
     count = 1
 
     network {
-      port "http" {
+      port "prometheus_ui" {
         static = 9090
       }
     }
@@ -35,7 +35,7 @@ job "prometheus" {
       driver = "docker"
 
       config {
-        image = "prom/node-exporter:v1.3.1"
+        image = "prom/prometheus:v2.32.1"
 
         mount {
           type   = "bind"
@@ -44,7 +44,14 @@ job "prometheus" {
           readonly = true
         }
 
-        ports = ["http"]
+        mount {
+          type   = "bind"
+          source = "local/webserver_alert.yml"
+          target = "/etc/prometheus/webserver_alert.yml"
+          readonly = true
+        }
+        
+        ports = ["prometheus_ui"]
 
       }
         
@@ -59,13 +66,47 @@ global:
   external_labels:
     monitor: 'iot-monitor'
 
+alerting:
+  alertmanagers:
+  - consul_sd_configs:
+    - server: '{{ env "NOMAD_IP_prometheus_ui" }}:8500'
+      services: ['alertmanager']
+
+rule_files:
+  - "webserver_alert.yml"
+
 scrape_configs:
+
+  # alertmanager
+  - job_name: 'alertmanager'
+
+    consul_sd_configs:
+    - server: '{{ env "NOMAD_IP_prometheus_ui" }}:8500'
+      services: ['alertmanager']
+
+  # consul metrics
+  - job_name: 'consul_metrics'
+    scheme: 'http'
+
+    consul_sd_configs:
+    - server: '{{ env "NOMAD_IP_prometheus_ui" }}:8500'
+      services:
+        - 'consul'
+        
+  # node-exporter metrics
+  - job_name: 'node'
+
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+
+    static_configs:
+      - targets: ['{{ env "NOMAD_IP_prometheus_ui" }}:9100']
 
   # nomad metrics
   - job_name: 'nomad_metrics'
 
     consul_sd_configs:
-    - server: '{{ env "NOMAD_IP_http" }}:8500'
+    - server: '{{ env "NOMAD_IP_prometheus_ui" }}:8500'
       services: ['nomad-client', 'nomad']
 
     relabel_configs:
@@ -78,15 +119,6 @@ scrape_configs:
     params:
       format: ['prometheus']
 
-  # consul metrics
-  - job_name: 'consul_metrics'
-    scheme: 'http'
-
-    consul_sd_configs:
-    - server: '{{ env "NOMAD_IP_http" }}:8500'
-      services:
-        - 'consul'
-
   # prometheus metrics
   - job_name: 'prometheus'
 
@@ -94,18 +126,27 @@ scrape_configs:
     scrape_interval: 5s
 
     static_configs:
-      - targets: ['{{ env "NOMAD_IP_http" }}:9090']
-
-  # node-exporter metrics
-  - job_name: 'node'
-
-    # Override the global default and scrape targets from this job every 5 seconds.
-    scrape_interval: 5s
-
-    static_configs:
-      - targets: ['{{ env "NOMAD_IP_http" }}:9100']
+      - targets: ['{{ env "NOMAD_IP_prometheus_ui" }}:9090']
 EOH
         destination = "local/prometheus.yml"
+      }
+
+      template {
+        change_mode = "noop"
+        data = <<EOH
+---
+groups:
+- name: prometheus_alerts
+  rules:
+  - alert: Webserver down
+    expr: absent(up{job="webserver"})
+    for: 10s
+    labels:
+      severity: critical
+    annotations:
+      description: "Our webserver is down."
+EOH
+        destination = "local/webserver_alert.yml"
       }
 
       resources {
@@ -115,15 +156,15 @@ EOH
 
       service {
         name = "prometheus"
-        tags = []
-        port = "http"
-        // check {
-        //   name     = "http port alive"
-        //   type     = "http"
-        //   path     = "/-/healthy"
-        //   interval = "10s"
-        //   timeout  = "2s"
-        // }
+        tags = ["urlprefix-/"]
+        port = "prometheus_ui"
+        check {
+          name     = "prometheus_ui port alive"
+          type     = "http"
+          path     = "/-/healthy"
+          interval = "10s"
+          timeout  = "2s"
+        }
       }
 
     }

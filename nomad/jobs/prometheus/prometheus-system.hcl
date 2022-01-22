@@ -40,7 +40,7 @@ global:
   evaluation_interval: 15s
 
   external_labels:
-    monitor: 'rtl433-monitor'
+    monitor: 'iot-monitor'
 
 scrape_configs:
 
@@ -60,6 +60,15 @@ scrape_configs:
     metrics_path: /v1/metrics
     params:
       format: ['prometheus']
+
+  # consul metrics
+  - job_name: 'consul_metrics'
+    scheme: 'http'
+
+    consul_sd_configs:
+    - server: '{{ env "NOMAD_IP_http" }}:8500'
+      services:
+        - 'consul'
 
   # prometheus metrics
   - job_name: 'prometheus'
