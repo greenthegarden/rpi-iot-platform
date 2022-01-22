@@ -9,7 +9,7 @@ job "prometheus" {
   
   type        = "service"
 
-  group "monitor" {
+  group "monitoring" {
 
     count = 1
 
@@ -49,7 +49,7 @@ job "prometheus" {
       }
         
       template {
-        // change_mode = "noop"
+        change_mode = "noop"
         data = <<EOH
 ---
 global:
@@ -94,7 +94,7 @@ scrape_configs:
     scrape_interval: 5s
 
     static_configs:
-      - targets: ['localhost:9090']
+      - targets: ['{{ env "NOMAD_IP_http" }}:9090']
 
   # node-exporter metrics
   - job_name: 'node'
@@ -103,7 +103,7 @@ scrape_configs:
     scrape_interval: 5s
 
     static_configs:
-      - targets: ['localhost:9100']
+      - targets: ['{{ env "NOMAD_IP_http" }}:9100']
 EOH
         destination = "local/prometheus.yml"
       }
@@ -117,13 +117,13 @@ EOH
         name = "prometheus"
         tags = []
         port = "http"
-        check {
-          name     = "http port alive"
-          type     = "http"
-          path     = "/-/healthy"
-          interval = "10s"
-          timeout  = "2s"
-        }
+        // check {
+        //   name     = "http port alive"
+        //   type     = "http"
+        //   path     = "/-/healthy"
+        //   interval = "10s"
+        //   timeout  = "2s"
+        // }
       }
 
     }

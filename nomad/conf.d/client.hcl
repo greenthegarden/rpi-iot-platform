@@ -1,5 +1,7 @@
 client {
   enabled = true
+  meta {
+  }
   network_interface = "eth0"
   server_join {
     retry_join = [
@@ -15,3 +17,13 @@ client {
     disable_file_sandbox = true
   }
 }
+
+// plugin "docker" {
+//   config {
+//     // allow_privileged = true
+//     // allow_caps = [ "ALL" ]
+//     volumes {
+//       enabled      = true
+//     }
+//   }
+// }

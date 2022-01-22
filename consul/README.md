@@ -4,6 +4,7 @@ Sources:
 
 https://medium.com/swlh/running-hashicorp-nomad-consul-pihole-and-gitea-on-raspberry-pi-3-b-f3f0d66c907
 https://www.nomadproject.io/docs/integrations/consul-connect
+https://bitbucket.org/harriga/hashistack-pi-cluster/src/master/packer/files/consul/server.hcl
 
 
 ```

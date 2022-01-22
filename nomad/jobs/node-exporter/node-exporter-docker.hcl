@@ -6,7 +6,7 @@ job "node-exporter" {
   
   type = "service"
 
-  group "monitor" {
+  group "monitoring" {
 
     count = 1
 
