@@ -18,7 +18,7 @@ job "prometheus" {
     }
 
     network {
-      port "prometheus_ui" {
+      port "http" {
         static = 9090
       }
     }
@@ -32,10 +32,10 @@ job "prometheus" {
 
     service {
       name = "prometheus"
-      port = "prometheus_ui"
+      port = "http"
 
       check {
-        name     = "prometheus_ui port alive"
+        name     = "http port alive"
         type     = "http"
         path     = "/-/healthy"
         interval = "10s"
@@ -44,18 +44,24 @@ job "prometheus" {
 
       tags = [
         "traefik.enable=true",
-        "traefik.http.routers.prometheus_ui.rule=PathPrefix(`/prometheus`)",
+        "traefik.http.routers.prometheus.rule=PathPrefix(`/prometheus`)",
       ]
     }
       
     task "prometheus" {
+
+      env {
+        PORT    = "${NOMAD_PORT_http}"
+        NODE_IP = "${NOMAD_IP_http}"
+      }
 
       driver = "docker"
 
       config {
         image = "prom/prometheus:v2.32.1"
 
-        mount {
+      
+      mount {
           type   = "bind"
           source = "local/prometheus.yml"
           target = "/etc/prometheus/prometheus.yml"
@@ -69,7 +75,7 @@ job "prometheus" {
           readonly = true
         }
         
-        ports = ["prometheus_ui"]
+        ports = ["http"]
 
       }
         
@@ -87,7 +93,7 @@ global:
 alerting:
   alertmanagers:
   - consul_sd_configs:
-    - server: '{{ env "NOMAD_IP_prometheus_ui" }}:8500'
+    - server: '{{ env "NOMAD_IP_http" }}:8500'
       services: ['alertmanager']
 
 rule_files:
@@ -99,7 +105,7 @@ scrape_configs:
   - job_name: 'alertmanager'
 
     consul_sd_configs:
-    - server: '{{ env "NOMAD_IP_prometheus_ui" }}:8500'
+    - server: '{{ env "NOMAD_IP_http" }}:8500'
       services: ['alertmanager']
 
   # consul metrics
@@ -107,7 +113,7 @@ scrape_configs:
     scheme: 'http'
 
     consul_sd_configs:
-    - server: '{{ env "NOMAD_IP_prometheus_ui" }}:8500'
+    - server: '{{ env "NOMAD_IP_http" }}:8500'
       services:
         - 'consul'
 
@@ -115,7 +121,7 @@ scrape_configs:
   - job_name: 'emqx'
 
     consul_sd_configs:
-    - server: '{{ env "NOMAD_IP_prometheus_ui" }}:8500'
+    - server: '{{ env "NOMAD_IP_http" }}:8500'
       services:
         - 'emqx-edge'
 
@@ -126,13 +132,13 @@ scrape_configs:
     scrape_interval: 5s
 
     static_configs:
-      - targets: ['{{ env "NOMAD_IP_prometheus_ui" }}:9100']
+      - targets: ['{{ env "NOMAD_IP_http" }}:9100']
 
   # nomad metrics
   - job_name: 'nomad_metrics'
 
     consul_sd_configs:
-    - server: '{{ env "NOMAD_IP_prometheus_ui" }}:8500'
+    - server: '{{ env "NOMAD_IP_http" }}:8500'
       services: ['nomad-client', 'nomad']
 
     relabel_configs:
@@ -152,7 +158,7 @@ scrape_configs:
     scrape_interval: 5s
 
     static_configs:
-      - targets: ['{{ env "NOMAD_IP_prometheus_ui" }}:9090']
+      - targets: ['{{ env "NOMAD_IP_http" }}:9090']
 EOH
         destination = "local/prometheus.yml"
       }

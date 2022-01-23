@@ -5,7 +5,7 @@ sudo apt update
 sudo apt upgrade
 
 # install utilities
-sudo apt install git neovim htop
+sudo apt install -y git neovim htop dnsutils
 
 # install docker
 curl -fsSL https://get.docker.com -o docker-script.sh
