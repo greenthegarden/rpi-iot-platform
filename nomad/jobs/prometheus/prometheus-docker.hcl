@@ -56,11 +56,6 @@ job "prometheus" {
 
     task "prometheus" {
 
-      env {
-        PORT    = "${NOMAD_PORT_http}"
-        NODE_IP = "${NOMAD_IP_http}"
-      }
-
       driver = "docker"
 
       config {
@@ -191,8 +186,6 @@ EOH
         cpu    = 100
         memory = 100
       }
-
-
 
     }
 

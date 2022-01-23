@@ -11,8 +11,12 @@ job "alertmanager" {
 
     count = 1
 
+    ephemeral_disk {
+      size = 300
+    }
+    
     network {
-      port "alertmanager_ui" {
+      port "http" {
         static = 9093
       }
     }
@@ -24,8 +28,25 @@ job "alertmanager" {
       mode = "fail"
     }
 
-    ephemeral_disk {
-      size = 300
+    service {
+      name = "alertmanager"
+      port = "http"
+
+      check {
+        name     = "http port alive"
+        type     = "http"
+        path     = "/-/healthy"
+        interval = "10s"
+        timeout  = "2s"
+      }
+
+      tags = [
+        "traefik.enable=true",
+        "traefik.http.routers.alertmanager.rule=PathPrefix(`/alertmanager`)",
+        "traefik.http.middlewares.alertmanager-stripprefix.stripprefix.prefixes=/alertmanager",
+        "traefik.http.middlewares.alertmanager-stripprefix.stripprefix.forceSlash=false",
+        "traefik.http.routers.alertmanager.middlewares=alertmanager-stripprefix",
+      ]        
     }
 
     task "alertmanager" {
@@ -34,25 +55,12 @@ job "alertmanager" {
 
       config {
         image = "prom/alertmanager:v0.23.0"
-        ports = ["alertmanager_ui"]
+        ports = ["http"]
       }
 
       resources {
         cpu    = 100
         memory = 100
-      }
-
-      service {
-        name = "alertmanager"
-        tags = ["urlprefix-/alertmanager strip=/alertmanager"]
-        port = "alertmanager_ui"
-        check {
-          name     = "alertmanager_ui port alive"
-          type     = "http"
-          path     = "/-/healthy"
-          interval = "10s"
-          timeout  = "2s"
-        }
       }
 
     }

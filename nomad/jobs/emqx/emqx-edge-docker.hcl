@@ -13,7 +13,7 @@ job "emqx-edge" {
     count = 1
 
     network {
-      port "emqx_ui" {
+      port "http" {
         to = 18083
       }
       port "mqtt" {
@@ -29,7 +29,7 @@ job "emqx-edge" {
         
     service {
       name = "emqx-edge"
-      port = "emqx_ui"
+      port = "http"
 
       // check {
       //   type = "http"
@@ -40,11 +40,12 @@ job "emqx-edge" {
 
       tags = [
         "traefik.enable=true",
-        "traefik.http.routers.emqx_ui.rule=PathPrefix(`/broker`)",
+        "traefik.http.routers.emqx.rule=PathPrefix(`/broker`)",
+        "traefik.http.middlewares.emqx-stripprefix.stripprefix.prefixes=/broker",
+        "traefik.http.middlewares.emqx-stripprefix.stripprefix.forceSlash=false",
+        "traefik.http.routers.emqx.middlewares=emqx-stripprefix",
       ]
     }
-
-
 
     task "emqx-edge" {
 
@@ -54,12 +55,7 @@ job "emqx-edge" {
         image = "emqx/emqx-edge:4.3.10-alpine-arm32v7"
         // force_pull = true
 
-        ports = ["mqtt", "emqx_ui"]        
-      }
-
-      env {
-        PORT    = "${NOMAD_PORT_emqx_ui}"
-        NODE_IP = "${NOMAD_IP_emqx_ui}"
+        ports = ["http", "mqtt"]        
       }
 
       resources {
