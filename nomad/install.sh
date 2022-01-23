@@ -29,6 +29,10 @@ configure () {
   # add configuration
   sudo cp conf.d/{base,client,server}.hcl ${NOMAD_BASE}/conf.d
 
+  # add data directories
+  sudo mkdir -p /mnt/storage/nomad/data/pihole/pihole
+  sudo mkdir -p /mnt/storage/nomad/data/pihole/dnsmasq.d
+  
   # create user and set permissions
   sudo useradd nomad -s /bin/false -d ${NOMAD_BASE}/conf.d -G pi,docker
   sudo usermod -a -G nomad pi

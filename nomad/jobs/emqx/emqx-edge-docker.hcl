@@ -40,7 +40,7 @@ job "emqx-edge" {
 
       tags = [
         "traefik.enable=true",
-        "traefik.http.routers.emqx_ui.rule=Host(`iot.localdomain`) && PathPrefix(`/broker`)",
+        "traefik.http.routers.emqx_ui.rule=PathPrefix(`/broker`)",
       ]
     }
 
