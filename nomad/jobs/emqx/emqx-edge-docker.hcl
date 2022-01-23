@@ -1,3 +1,5 @@
+# Treafik config source: https://blog.sethcorker.com/traefik-routing-for-web-apps/
+
 job "emqx-edge" {
 
   region = "global"
@@ -11,7 +13,7 @@ job "emqx-edge" {
     count = 1
 
     network {
-      port "http" {
+      port "emqx_ui" {
         to = 18083
       }
       port "mqtt" {
@@ -25,6 +27,25 @@ job "emqx-edge" {
       mode     = "delay"
     }
         
+    service {
+      name = "emqx-edge"
+      port = "emqx_ui"
+
+      // check {
+      //   type = "http"
+      //   path = "/metrics/"
+      //   interval = "10s"
+      //   timeout = "2s"
+      // }
+
+      tags = [
+        "traefik.enable=true",
+        "traefik.http.routers.emqx_ui.rule=Host(`iot.localdomain`) && PathPrefix(`/broker`)",
+      ]
+    }
+
+
+
     task "emqx-edge" {
 
       driver = "docker"
@@ -33,28 +54,12 @@ job "emqx-edge" {
         image = "emqx/emqx-edge:4.3.10-alpine-arm32v7"
         // force_pull = true
 
-        ports = ["mqtt", "http"]
-        
-        // logging {
-        //   type = "journald"
-        //   config {
-        //     tag = "NODE-EXPORTER"
-        //   }
-        // }
-
+        ports = ["mqtt", "emqx_ui"]        
       }
 
-      service {
-        name = "emqx-edge"
-        tags = ["mqtt", "http"]
-        port = "http"
-
-        // check {
-        //   type = "http"
-        //   path = "/metrics/"
-        //   interval = "10s"
-        //   timeout = "2s"
-        // }
+      env {
+        PORT    = "${NOMAD_PORT_emqx_ui}"
+        NODE_IP = "${NOMAD_IP_emqx_ui}"
       }
 
       resources {

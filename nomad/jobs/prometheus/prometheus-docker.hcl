@@ -13,6 +13,10 @@ job "prometheus" {
 
     count = 1
 
+    ephemeral_disk {
+      size = 300
+    }
+
     network {
       port "prometheus_ui" {
         static = 9090
@@ -26,10 +30,24 @@ job "prometheus" {
       mode     = "fail"
     }
 
-    ephemeral_disk {
-      size = 300
-    }
+    service {
+      name = "prometheus"
+      port = "prometheus_ui"
 
+      check {
+        name     = "prometheus_ui port alive"
+        type     = "http"
+        path     = "/-/healthy"
+        interval = "10s"
+        timeout  = "2s"
+      }
+
+      tags = [
+        "traefik.enable=true",
+        "traefik.http.routers.prometheus_ui.rule=PathPrefix(`/prometheus`)",
+      ]
+    }
+      
     task "prometheus" {
 
       driver = "docker"
@@ -92,7 +110,15 @@ scrape_configs:
     - server: '{{ env "NOMAD_IP_prometheus_ui" }}:8500'
       services:
         - 'consul'
-        
+
+  # emqx metric
+  - job_name: 'emqx'
+
+    consul_sd_configs:
+    - server: '{{ env "NOMAD_IP_prometheus_ui" }}:8500'
+      services:
+        - 'emqx-edge'
+
   # node-exporter metrics
   - job_name: 'node'
 
@@ -138,13 +164,13 @@ EOH
 groups:
 - name: prometheus_alerts
   rules:
-  - alert: Webserver down
-    expr: absent(up{job="webserver"})
+  - alert: MQTT Broker down
+    expr: absent(up{job="mqttbroker"})
     for: 10s
     labels:
       severity: critical
     annotations:
-      description: "Our webserver is down."
+      description: "MQTT Broker is down."
 EOH
         destination = "local/webserver_alert.yml"
       }
@@ -154,18 +180,7 @@ EOH
         memory = 100
       }
 
-      service {
-        name = "prometheus"
-        tags = ["urlprefix-/"]
-        port = "prometheus_ui"
-        check {
-          name     = "prometheus_ui port alive"
-          type     = "http"
-          path     = "/-/healthy"
-          interval = "10s"
-          timeout  = "2s"
-        }
-      }
+
 
     }
 

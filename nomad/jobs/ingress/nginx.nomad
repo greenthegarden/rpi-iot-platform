@@ -23,31 +23,52 @@ job "ingress" {
       delay    = "15s"
     }
 
-    task "app" {
+    service {
+      name = "web"
+      port = "http"
+
+      tags = [
+        "traefik.enable=true",
+        "traefik.http.routers.http.rule=Path(`/myapp`)",
+      ]
+
+      check {
+        type     = "http"
+        path     = "/"
+        interval = "2s"
+        timeout  = "2s"
+      }
+      
+    }
+
+    task "nginx" {
 
       driver = "docker"
 
       config {
         image = "nginx:stable-alpine"
 
-        mounts = [
-          {
-            type   = "bind"
-            source = "local/ingress/nginx.conf"
-            target = "/etc/nginx/nginx.conf"
-          },
-          {
-            type   = "bind"
-            source = "local/ingress/proxy.conf"
-            target = "/etc/nginx/conf.d/proxy.conf"
-          },
-        ]
+        mount {
+          type   = "bind"
+          source = "local/ingress/nginx.conf"
+          target = "/etc/nginx/nginx.conf"
+          readonly = true
+        }
+
+        // mount {
+        //   type   = "bind"
+        //   source = "local/ingress/proxy.conf"
+        //   target = "/etc/nginx/conf.d/proxy.conf"
+        //   readonly = true
+        // }
 
         ports = ["http"]
 
       }
 
       template {
+        change_mode   = "signal"
+        change_signal = "SIGINT"
         // source        = "/mnt/storage/nomad/jobs/ingress/tpl/nginx.conf.tpl"
         data = <<EOF
 user  nginx;
@@ -80,17 +101,17 @@ http {
 }
 EOF
         destination   = "local/ingress/nginx.conf"
-        change_mode   = "signal"
-        change_signal = "SIGINT"
       }
 
       template {
+        change_mode   = "signal"
+        change_signal = "SIGINT"
         // source        = "/mnt/storage/nomad/jobs/ingress/tpl/proxy.conf.tpl"
         data = <<EOF
 server {
   listen 80;
-  server_name consul.iot.localdomain;
-  {{ range service "consul" }}
+  server_name iot.localdomain;
+  {{ range service "emqx-edge" }}
   set $upstream {{ .Address }}:{{ .Port }};
   {{ end }}
   location / {
@@ -120,8 +141,6 @@ server {
 }
 EOF
         destination   = "local/ingress/proxy.conf"
-        change_mode   = "signal"
-        change_signal = "SIGINT"
       }
 
       resources {
@@ -129,10 +148,7 @@ EOF
         memory = 64
       }
 
-      service {
-        name = "ingress"
-        port = "http"
-      }
+
     }
   }
 }
