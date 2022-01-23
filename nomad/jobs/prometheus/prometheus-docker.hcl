@@ -45,9 +45,15 @@ job "prometheus" {
       tags = [
         "traefik.enable=true",
         "traefik.http.routers.prometheus.rule=PathPrefix(`/prometheus`)",
+        "traefik.http.middlewares.prometheus-stripprefix.stripprefix.prefixes=/prometheus",
+        "traefik.http.middlewares.prometheus-stripprefix.stripprefix.forceSlash=false",
+        "traefik.http.routers.prometheus.middlewares=prometheus-stripprefix",
       ]
     }
       
+
+        // "traefik.http.routers.prometheus.loadbalancer.server.port=9090",
+
     task "prometheus" {
 
       env {
