@@ -27,18 +27,12 @@ job "ingress" {
       name = "web"
       port = "http"
 
-      tags = [
-        "traefik.enable=true",
-        "traefik.http.routers.http.rule=Path(`/myapp`)",
-      ]
-
       check {
         type     = "http"
         path     = "/"
         interval = "2s"
         timeout  = "2s"
-      }
-      
+      }      
     }
 
     task "nginx" {
@@ -55,15 +49,14 @@ job "ingress" {
           readonly = true
         }
 
-        // mount {
-        //   type   = "bind"
-        //   source = "local/ingress/proxy.conf"
-        //   target = "/etc/nginx/conf.d/proxy.conf"
-        //   readonly = true
-        // }
+        mount {
+          type   = "bind"
+          source = "local/ingress/proxy.conf"
+          target = "/etc/nginx/conf.d/default.conf"
+          readonly = true
+        }
 
         ports = ["http"]
-
       }
 
       template {
@@ -79,7 +72,6 @@ pid        /var/run/nginx.pid;
 events {
     worker_connections  1024;
 }
-
 
 http {
     include       /etc/nginx/mime.types;
@@ -110,26 +102,11 @@ EOF
         data = <<EOF
 server {
   listen 80;
-  server_name iot.localdomain;
-  {{ range service "emqx-edge" }}
+  server_name localhost;
+  {{ range service "traefik" }}
   set $upstream {{ .Address }}:{{ .Port }};
   {{ end }}
-  location / {
-            proxy_pass          http://$upstream;
-            proxy_set_header    Host $host;
-            proxy_set_header    X-Real-IP $remote_addr;
-            proxy_set_header    X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header    X-Forwarded-Host $server_name;
-            proxy_read_timeout  90;
-  }
-}
 
-server {
-  listen 80;
-  server_name nomad.iot.localdomain;
-  {{ range service "nomad" }}
-  set $upstream {{ .Address }}:{{ .Port }};
-  {{ end }}
   location / {
             proxy_pass          http://$upstream;
             proxy_set_header    Host $host;

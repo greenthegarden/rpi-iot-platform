@@ -89,11 +89,11 @@ job "traefik" {
       template {
         data = <<EOF
 [entryPoints]
-    [entryPoints.http]
-    address = ":8080"
-    [entryPoints.traefik]
+  [entryPoints.http]
+      address = ":8080"
+  [entryPoints.traefik]
     address = ":8081"
-    [entryPoints.metrics]
+  [entryPoints.metrics]
     address = ":8082"
 
 [api]
@@ -102,6 +102,14 @@ job "traefik" {
 
 [log]
     level = "DEBUG"
+
+[accessLog]
+
+[metrics]
+  [metrics.prometheus]
+    addEntryPointsLabels = true
+    addServicesLabels = true
+    entryPoint = "metrics"
 
 # Enable Consul Catalog configuration backend.
 [providers.consulCatalog]

@@ -40,6 +40,7 @@ job "emqx-edge" {
 
       tags = [
         "traefik.enable=true",
+        "traefik.http.routers.emqx.service=emqx-edge",
         "traefik.http.routers.emqx.rule=PathPrefix(`/broker`)",
         "traefik.http.middlewares.emqx-stripprefix.stripprefix.prefixes=/broker",
         "traefik.http.middlewares.emqx-stripprefix.stripprefix.forceSlash=false",

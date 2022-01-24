@@ -38,6 +38,9 @@ job "portainer" {
       tags = [
         "traefik.enable=true",
         "traefik.http.routers.portainer.rule=PathPrefix(`/portainer`)",
+        "traefik.http.middlewares.portainer-stripprefix.stripprefix.prefixes=/portainer",
+        "traefik.http.middlewares.portainer-stripprefix.stripprefix.forceSlash=false",
+        "traefik.http.routers.portainer.middlewares=portainer-stripprefix",
       ]
     }
       
