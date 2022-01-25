@@ -41,12 +41,28 @@ job "traefik" {
 
       port = "http"
 
-      // tags = [
-      //   "traefik.enable=true",
-      //   "traefik.http.routers.dashboard.rule=Host(`traefik.localhost`)",
-      //   "traefik.http.routers.dashboard.service=api@interal",
-      //   "traefik.http.routers.dashboard.entrypoints=web",
-      // ]
+    }
+
+    service {
+      name = "traefik-dashboard"
+
+      check {
+        name     = "alive"
+        type     = "tcp"
+        port     = "api"
+        interval = "10s"
+        timeout  = "2s"
+      }
+
+      port = "api"
+
+      tags = [
+        "traefik.enable=true",
+        "traefik.http.routers.traefik.rule=PathPrefix(`/traefik`)",
+        "traefik.http.middlewares.traefik-stripprefix.stripprefix.prefixes=/traefik",
+        "traefik.http.middlewares.traefik-stripprefix.stripprefix.forceSlash=false",
+        "traefik.http.routers.traefik.middlewares=traefik-stripprefix",
+      ]
     }
 
     task "traefik" {

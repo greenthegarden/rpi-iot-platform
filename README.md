@@ -82,3 +82,4 @@ nomad job plan job.hcl
 nomad job run job.hcl
 ```
 
+Look to include https://nginxproxymanager.com/ instead of nginx

@@ -27,12 +27,12 @@ job "ingress" {
       name = "web"
       port = "http"
 
-      check {
-        type     = "http"
-        path     = "/"
-        interval = "2s"
-        timeout  = "2s"
-      }      
+      // check {
+      //   type     = "http"
+      //   path     = "/"
+      //   interval = "2s"
+      //   timeout  = "2s"
+      // }      
     }
 
     task "nginx" {
