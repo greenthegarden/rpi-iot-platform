@@ -46,13 +46,19 @@ job "prometheus" {
         "traefik.enable=true",
         "traefik.http.routers.prometheus.rule=PathPrefix(`/prometheus`)",
         "traefik.http.routers.prometheus.middlewares=prometheus-redirectregex, prometheus-stripprefix",
-        "traefik.http.middlewares.prometheus-redirectregex.redirectregex.regex=^(.*/prometheus)$$",
+        "traefik.http.middlewares.prometheus-redirectregex.redirectregex.regex=(http:\\/\\/[^\\/]+\\/([^\\?]+)[^\\/])$",
         "traefik.http.middlewares.prometheus-redirectregex.redirectregex.replacement=$${1}/",
         "traefik.http.middlewares.prometheus-stripprefix.stripprefix.prefixes=/prometheus",
         "traefik.http.middlewares.prometheus-stripprefix.stripprefix.forceSlash=true",
+        "traefik.http.services.prometheus.loadbalancer.servers.url=192.168.1.107:9090",
       ]
     }
       
+
+
+        // "traefik.http.middlewares.prometheus-redirectregex.redirectregex.regex=^(.*/prometheus)$$",
+        // "traefik.http.middlewares.prometheus-redirectregex.redirectregex.replacement=$${1}/",
+
         // "traefik.http.middlewares.prometheus-replacepathregex.replacepathregex.regex=^/prometheus/(.*)",
         // "traefik.http.middlewares.prometheus-replacepathregex.replacepathregex.replacement=/$$1",
 
@@ -71,11 +77,10 @@ job "prometheus" {
 
       config {
         image = "prom/prometheus:v2.32.1"
-        args = [
-          "--web.external-url=http://localhost:9090/prometheus/"
-        ]
-
-      
+        // args = [
+        //   "--web.external-url=http://localhost:9090/prometheus/"
+        // ]
+    
       mount {
           type   = "bind"
           source = "local/prometheus.yml"

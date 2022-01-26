@@ -1,4 +1,6 @@
-# Source: https://learn.hashicorp.com/tutorials/nomad/load-balancing-traefik?in=nomad/load-balancing
+# Sources:
+# https://learn.hashicorp.com/tutorials/nomad/load-balancing-traefik?in=nomad/load-balancing
+# https://community.traefik.io/t/traefik-as-reverse-proxy-for-grafana-and-prometheus/2663
 
 job "traefik" {
 
@@ -59,11 +61,14 @@ job "traefik" {
       tags = [
         "traefik.enable=true",
         "traefik.http.routers.traefik.rule=PathPrefix(`/traefik`)",
-        "traefik.http.middlewares.traefik-stripprefix.stripprefix.prefixes=/traefik",
-        "traefik.http.middlewares.traefik-stripprefix.stripprefix.forceSlash=false",
-        "traefik.http.routers.traefik.middlewares=traefik-stripprefix",
+        "traefik.http.routers.traefik.service=api@internal",
       ]
     }
+
+        // "traefik.http.middlewares.traefik-stripprefix.stripprefix.prefixes=/traefik",
+        // "traefik.http.middlewares.traefik-stripprefix.stripprefix.forceSlash=false",
+        // "traefik.http.routers.traefik.middlewares=traefik-stripprefix",
+
 
     task "traefik" {
       driver = "docker"
