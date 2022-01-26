@@ -43,9 +43,9 @@ job "alertmanager" {
       tags = [
         "traefik.enable=true",
         "traefik.http.routers.alertmanager.rule=PathPrefix(`/alertmanager`)",
+        "traefik.http.routers.alertmanager.middlewares=alertmanager-stripprefix",
         "traefik.http.middlewares.alertmanager-stripprefix.stripprefix.prefixes=/alertmanager",
         "traefik.http.middlewares.alertmanager-stripprefix.stripprefix.forceSlash=false",
-        "traefik.http.routers.alertmanager.middlewares=alertmanager-stripprefix",
       ]        
     }
 

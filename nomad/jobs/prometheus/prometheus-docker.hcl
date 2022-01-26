@@ -34,24 +34,33 @@ job "prometheus" {
       name = "prometheus"
       port = "http"
 
-      check {
-        name     = "http port alive"
-        type     = "http"
-        path     = "/-/healthy"
-        interval = "10s"
-        timeout  = "2s"
-      }
+      // check {
+      //   name     = "http port alive"
+      //   type     = "http"
+      //   path     = "/-/healthy"
+      //   interval = "10s"
+      //   timeout  = "2s"
+      // }
 
       tags = [
         "traefik.enable=true",
-        "traefik.http.routers.prometheus.rule=Path(`/prometheus`)",
+        "traefik.http.routers.prometheus.rule=PathPrefix(`/prometheus`)",
+        "traefik.http.routers.prometheus.middlewares=prometheus-redirectregex, prometheus-stripprefix",
+        "traefik.http.middlewares.prometheus-redirectregex.redirectregex.regex=^(.*/prometheus)$$",
+        "traefik.http.middlewares.prometheus-redirectregex.redirectregex.replacement=$${1}/",
         "traefik.http.middlewares.prometheus-stripprefix.stripprefix.prefixes=/prometheus",
-        "traefik.http.middlewares.prometheus-stripprefix.stripprefix.forceSlash=false",
-        "traefik.http.routers.prometheus.middlewares=prometheus-stripprefix",
+        "traefik.http.middlewares.prometheus-stripprefix.stripprefix.forceSlash=true",
       ]
     }
       
-        // "traefik.http.routers.prometheus.service=prometheus",
+        // "traefik.http.middlewares.prometheus-replacepathregex.replacepathregex.regex=^/prometheus/(.*)",
+        // "traefik.http.middlewares.prometheus-replacepathregex.replacepathregex.replacement=/$$1",
+
+        // "traefik.http.routers.prometheus.rule=Path(`/prometheus`)",
+        // "traefik.http.middlewares.prometheus-stripprefix.stripprefix.prefixes=/prometheus",
+        // "traefik.http.middlewares.prometheus-stripprefix.stripprefix.forceSlash=false",
+        // "traefik.http.routers.prometheus.middlewares=prometheus-stripprefix",
+                // "traefik.http.routers.prometheus.service=prometheus",
         // "traefik.http.services.prometheus.loadbalancer.server.port=9090",
 
         // "traefik.http.routers.prometheus.loadbalancer.server.port=9090",
@@ -62,6 +71,9 @@ job "prometheus" {
 
       config {
         image = "prom/prometheus:v2.32.1"
+        args = [
+          "--web.external-url=http://localhost:9090/prometheus/"
+        ]
 
       
       mount {

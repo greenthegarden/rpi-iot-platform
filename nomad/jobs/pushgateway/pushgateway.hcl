@@ -40,9 +40,11 @@ job "pushgateway" {
       tags = [
         "traefik.enable=true",
         "traefik.http.routers.pushgateway.rule=PathPrefix(`/pushgateway`)",
+        "traefik.http.routers.pushgateway.middlewares=pushgateway-redirectregex, pushgateway-stripprefix",
+        "traefik.http.middlewares.pushgateway-redirectregex.redirectregex.regex=^(.*/pushgateway)$$",
+        "traefik.http.middlewares.pushgateway-redirectregex.redirectregex.replacement=$${1}/",
         "traefik.http.middlewares.pushgateway-stripprefix.stripprefix.prefixes=/pushgateway",
-        "traefik.http.middlewares.pushgateway-stripprefix.stripprefix.forceSlash=false",
-        "traefik.http.routers.pushgateway.middlewares=pushgateway-stripprefix",
+        "traefik.http.middlewares.pushgateway-stripprefix.stripprefix.forceSlash=true",
       ]        
     }
 

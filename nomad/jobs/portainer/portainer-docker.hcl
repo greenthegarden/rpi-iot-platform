@@ -1,3 +1,5 @@
+# Source for Traefik config https://stackoverflow.com/questions/41637806/routing-paths-with-traefik
+
 job "portainer" {
 
   region = "global"
@@ -38,12 +40,21 @@ job "portainer" {
       tags = [
         "traefik.enable=true",
         "traefik.http.routers.portainer.rule=PathPrefix(`/portainer`)",
-        "traefik.http.middlewares.portainer-stripprefix.stripprefix.prefixes=/portainer",
-        "traefik.http.middlewares.portainer-stripprefix.stripprefix.forceSlash=false",
-        "traefik.http.routers.portainer.middlewares=portainer-stripprefix",
+        "traefik.http.routers.portainer.middlewares=portainer-redirectregex, portainer-replacepathregex",
+        "traefik.http.middlewares.portainer-replacepathregex.replacepathregex.regex=^/portainer/(.*)",
+        "traefik.http.middlewares.portainer-replacepathregex.replacepathregex.replacement=/$$1",
+        "traefik.http.middlewares.portainer-redirectregex.redirectregex.regex=^(.*)/portainer$$",
+        "traefik.http.middlewares.portainer-redirectregex.redirectregex.replacement=$$1/portainer/",
       ]
     }
-      
+
+        // "traefik.http.middlewares.portainer-stripprefix.stripprefix.prefixes=/portainer",
+        // "traefik.http.middlewares.portainer-stripprefix.stripprefix.forceSlash=false",
+        // "traefik.http.routers.portainer.middlewares=portainer-stripprefix",
+
+        // // "traefik.http.routers.portainer-secure.rule=Host(`your-domain.com`) && PathPrefix(`/portainer`)"
+
+
     task "portainer" {
 
       driver = "docker"
