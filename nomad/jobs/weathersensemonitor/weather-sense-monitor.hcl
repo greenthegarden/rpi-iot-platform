@@ -36,16 +36,7 @@ job "weather-sense-monitor" {
       resources {
         cpu    = 200
         memory = 64
-        device "usb" {
-          constraint {
-            attribute = "${device.vendor}"
-            value = "0bda"
-          }
-          constraint {
-            attribute = "${device.model}"
-            value = "2838"
-          }
-        }
+        cores = 2
       }
     }
   }
