@@ -8,18 +8,6 @@ job "weather-sense-monitor" {
 
     count = 1
     
-    // service {
-    //   name = "node-exporter"
-    //   tags = []
-    //   port = "exporter"
-    //   check {
-    //     name     = "alive"
-    //     type     = "tcp"
-    //     interval = "10s"
-    //     timeout  = "2s"
-    //   }
-    // }
-
     task "weather-sense-monitor" {
       
       driver = "raw_exec"
@@ -36,7 +24,6 @@ job "weather-sense-monitor" {
       resources {
         cpu    = 200
         memory = 64
-        cores = 2
       }
     }
   }
